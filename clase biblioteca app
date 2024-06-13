@@ -1,0 +1,136 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from PIL import Image, ImageTk
+import mysql.connector
+import time
+
+class BibliotecaApp:
+    def _init_(self, master):
+        self.master = master
+        self.master.geometry("800x600")
+        self.master.configure(background='#EDFCFA')
+        self.master.title("BIBLIOTECA EL BUHO")
+        
+        self.frame_izquierdo = tk.Frame(self.master, bg="white")
+        self.frame_izquierdo.place(relwidth=0.5, relheight=1)
+        self.frame_izquierdo.option_add("*background", '#EDFCFA')
+        
+        try:
+            imagen = Image.open("pollito.png")  
+            imagen = imagen.resize((400, 600))
+            imagen_fondo = ImageTk.PhotoImage(imagen)
+        except IOError as e:
+            print("Error al abrir la imagen:", e)
+
+        self.canvas = tk.Canvas(self.master, width=400, height=600)
+        self.canvas.place(relx=0.5, rely=0, anchor="nw")
+        self.canvas.create_image(0, 0, anchor="nw", image=imagen_fondo)
+        self.canvas.option_add("*background", '#EDFCFA')
+        
+        self.logo = tk.Label(self.frame_izquierdo, text="BIBLIOTECA EL BUHO ", font=("Roboto", 16), bg="white")
+        self.logo.pack(pady=20)
+
+        self.titulo = tk.Label(self.frame_izquierdo, text="INICIO SESION\n", font=("Roboto", 18, "bold"), bg="white")
+        self.titulo.pack(pady=10)
+
+        self.entrada_name = self.crear_entrada(self.frame_izquierdo, "USER\nIngrese nombre de usuario:")
+        self.entrada_pass = self.crear_entrada(self.frame_izquierdo, "\n\nCLAVE\nIngrese contraseña:")
+
+        self.boton_sesion = ttk.Button(self.frame_izquierdo, text="INICIAR SESION", command=self.inicio_sesion)
+        self.boton_sesion.pack(pady=10)
+        self.boton_registro = ttk.Button(self.frame_izquierdo, text="REGISTRARSE", command=self.registrarse)
+        self.boton_registro.pack(fill="y", pady=0, padx=20)
+
+        self.mostrar_animacion()
+
+    def crear_entrada(self, frame, texto):
+        label = tk.Label(frame, text=texto, font=("Roboto", 12), bg="white", anchor="w")
+        label.pack(fill="x", padx=20)
+        entry = tk.Entry(frame, font=("Roboto", 12))
+        entry.pack(fill="x", padx=20, pady=5)
+        return entry
+
+    def mostrar_animacion(self):
+        # Lógica para la animación de la primera ventana
+        for alpha in range(0, 256, 8):
+            self.master.attributes("-alpha", alpha/255)
+            self.master.update_idletasks()
+            self.master.after(20)
+        
+        # Esperar 3 segundos antes de mostrar la segunda ventana
+        self.master.after(3000, self.mostrar_segunda_ventana)
+
+    def mostrar_segunda_ventana(self):
+        # Lógica para mostrar la segunda ventana
+        self.frame_izquierdo.destroy()
+        self.frame_izquierdo = tk.Frame(self.master, bg="white")
+        self.frame_izquierdo.place(relwidth=0.5, relheight=1)
+        self.frame_izquierdo.option_add("*background", '#EDFCFA')
+
+        self.titulo = tk.Label(self.frame_izquierdo, text="Bienvenido", font=("Roboto", 18, "bold"), bg="white")
+        self.titulo.pack(pady=10)
+
+        self.entrada_name = self.crear_entrada(self.frame_izquierdo, "USER\nIngrese nombre de usuario:")
+        self.entrada_pass = self.crear_entrada(self.frame_izquierdo, "\n\nCLAVE\nIngrese contraseña:")
+
+        self.boton_sesion = ttk.Button(self.frame_izquierdo, text="INICIAR SESION", command=self.inicio_sesion)
+        self.boton_sesion.pack(pady=10)
+        self.boton_registro = ttk.Button(self.frame_izquierdo, text="REGISTRARSE", command=self.registrarse)
+        self.boton_registro.pack(fill="y", pady=0, padx=20)
+
+    def registrarse(self):
+        # Obtener los datos del usuario
+        nombre_usuario = self.entrada_name.get()
+        contraseña = self.entrada_pass.get()
+
+        # Realizar la consulta de registro
+        try:
+            if conexion.is_connected():
+                cursor = conexion.cursor()
+                consulta = "INSERT INTO usuarios (nombre_usuario, contraseña) VALUES (%s, %s)"
+                valores = (nombre_usuario, contraseña)
+                cursor.execute(consulta, valores)
+                conexion.commit()
+                messagebox.showinfo("Registrarse", "Registro exitoso")
+                cursor.close()
+            else:
+                messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+        except mysql.connector.Error as e:
+            messagebox.showerror("Error", f"Error al registrar usuario: {e}")
+
+    def inicio_sesion(self):
+        # Obtener los datos del usuario
+        nombre_usuario = self.entrada_name.get()
+        contraseña = self.entrada_pass.get()
+
+        # Realizar la consulta de inicio de sesión
+        try:
+            if conexion.is_connected():
+                cursor = conexion.cursor()
+                consulta = "SELECT * FROM usuarios WHERE nombre_usuario = %s AND contraseña = %s"
+                valores = (nombre_usuario, contraseña)
+                cursor.execute(consulta, valores)
+                usuario = cursor.fetchone()
+                if usuario:
+                    messagebox.showinfo("Inicio de Sesión", "Inicio de sesión exitoso")
+                else:
+                    messagebox.showerror("Inicio de Sesión", "Nombre de usuario o contraseña incorrectos")
+                cursor.close()
+            else:
+                messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+        except mysql.connector.Error as e:
+            messagebox.showerror("Error", f"Error al iniciar sesión: {e}")
+
+def main():
+    root = tk.Tk()
+    app = BibliotecaApp(root)
+    root.mainloop()
+
+if _name_ == "_main_":
+    conexion = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='',
+        database='biblioteca'
+    )
+    main()
