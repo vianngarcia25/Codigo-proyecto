@@ -1,0 +1,40 @@
+import tkinter as tk
+from PIL import Image, ImageTk
+
+class AnimacionApp:
+    def _init_(self, master):
+        self.master = master
+        self.master.geometry("500x500")
+        
+        # Cargar la imagen
+        self.image = Image.open("pollito.png")
+        self.photo = ImageTk.PhotoImage(self.image)
+        
+        # Crear la etiqueta de la imagen
+        self.label_image = tk.Label(self.master, image=self.photo)
+        self.label_image.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Crear la etiqueta de texto
+        self.label_text = tk.Label(self.master, text="¡Hola, mundo!", font=("Arial", 24))
+        self.label_text.place(relx=0.5, rely=0.3, anchor=tk.CENTER)
+        
+        # Iniciar la animación
+        self.animar_aparicion()
+    
+    def animar_aparicion(self):
+        # Animar la aparición de la imagen y la etiqueta
+        for alpha in range(0, 256, 8):
+            self.master.attributes("-alpha", alpha/255)  # Configurar la transparencia de la ventana
+            self.master.update_idletasks()  # Actualizar la ventana
+            self.master.after(20)  # Esperar un poco antes de la próxima actualización
+        
+        # Mostrar completamente la ventana después de la animación
+        self.master.attributes("-alpha", 1)
+
+def main():
+    root = tk.Tk()
+    app = AnimacionApp(root)
+    root.mainloop()
+
+if _name_ == "_main_":
+    main()
